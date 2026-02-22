@@ -24,7 +24,7 @@ Built on **MCP (Model Context Protocol)** using **Java 11 and JDBC**. Just add t
 **Review and safety**
 
 - **always_review_ddl** — When `true`, all DDL (CREATE/ALTER/DROP etc.) triggers a confirmation window before execution.
-- **Danger keywords** — Two match modes: **whole_text** (substring anywhere in SQL, last gate) and **command_match** (only when the AST identifies the statement as that command). Confirmation window: Windows uses PowerShell WinForms (scrollable HTML); macOS uses osascript.
+- **Danger keywords** — Two match modes: **whole_text** (substring anywhere in SQL, gatekeeper) and **command_match** (only when the SQL Parser identifies the statement as that command). Confirmation window: Windows uses PowerShell WinForms (scrollable HTML); macOS uses osascript.
 
 **Logging**
 
@@ -210,7 +210,7 @@ Replace paths with your actual paths. After saving `mcp.json`, **fully quit and 
 **审查与安全**
 
 - **always_review_ddl** — 为 `true` 时，所有 DDL（CREATE/ALTER/DROP 等）执行前会弹出确认窗口。
-- **危险词** — 两种匹配方式：**whole_text**（SQL 中任意子串，最后一道关）、**command_match**（仅当 AST 判定为该命令时）。确认窗口：Windows 使用 PowerShell WinForms（可滚动 HTML）；macOS 使用 osascript。
+- **危险词** — 两种匹配方式：**whole_text**（SQL 中任意子串，焊门员）、**command_match**（仅当SQL解析器判定为该命令时）。确认窗口：Windows 使用 PowerShell WinForms（可滚动 HTML）；macOS 使用 osascript。
 
 **日志**
 
