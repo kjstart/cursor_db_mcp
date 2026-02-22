@@ -1,0 +1,52 @@
+name: Build and Release db_mcp (Java)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    name: Build db_mcp (Java)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn package -B -q -DskipTests
+
+      - name: Package release archive
+        run: |
+          ARCHIVE_NAME="db-mcp-server-${{ github.ref_name }}.zip"
+          zip -j "$ARCHIVE_NAME" \
+            target/db-mcp-*-fat.jar \
+            config.yaml.example \
+            USER_GUIDE.md
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
+
+      - name: Upload workflow artifact (manual run)
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-mcp-server
+          path: db-mcp-server-*.zip
+
+      - name: Upload Release Asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: db-mcp-server-*.zip
+          generate_release_notes: true

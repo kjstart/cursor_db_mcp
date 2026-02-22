@@ -1,0 +1,54 @@
+# Database MCP Server (Java / JDBC) - copy to config.yaml and edit
+
+# ---------------------------------------------------------------------------
+# connections: list of database connections (at least one required).
+# Put the driver JAR on the classpath when running (e.g. -cp ".:lib/*" or pom.xml).
+# ---------------------------------------------------------------------------
+connections:
+  - name: database1
+    driver: oracle.jdbc.OracleDriver
+    # db_type: oracle   # optional; Druid DbType: mysql, oracle, postgresql, sql_server; default mysql
+    url: "jdbc:oracle:thin:@//host:1521/ORCL"
+    user: myuser
+    password: mypass
+  # - name: database2
+  #   driver: com.mysql.cj.jdbc.Driver
+  #   db_type: mysql
+  #   url: "jdbc:mysql://localhost:3306/mydb"
+  #   user: root
+  #   password: secret
+
+# ---------------------------------------------------------------------------
+# review: confirmation rules before executing SQL. Omit to disable.
+# - whole_text_match: high-risk; trigger if keyword appears anywhere in SQL (after normalizing whitespace). Last gate.
+# - command_match: lower-risk; trigger only when AST says the statement is this command (e.g. CREATE, UPDATE).
+# - always_review_ddl: if true, all DDL (CREATE/ALTER/DROP etc.) triggers confirmation.
+# ---------------------------------------------------------------------------
+review:
+  whole_text_match:
+    - truncate
+    - delete
+    - drop
+    - call
+    - execute immediate
+    - alter
+    - grant
+    - revoke
+  command_match:
+    - create
+    - update
+    - replace
+    - insert
+    - merge
+  always_review_ddl: true
+
+# ---------------------------------------------------------------------------
+# logging: audit log and MCP console. Omit to disable.
+# - audit_log: write each execution to log file.
+# - mcp_console_log: print a short line to stderr per execute_sql / execute_sql_file (throttled).
+# - log_file: path for audit log; relative to config file dir if not absolute.
+# ---------------------------------------------------------------------------
+logging:
+  audit_log: true
+  mcp_console_log: true
+  log_file: "audit.log"
