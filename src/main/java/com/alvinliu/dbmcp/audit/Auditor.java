@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class Auditor {
     private static final long MAX_SIZE = 10L << 20; // 10MB
-    private static final DateTimeFormatter ROTATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss").withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter ROTATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HHmmss").withZone(ZoneId.systemDefault());
 
     private File file;
     private final Object lock = new Object();
@@ -99,7 +99,7 @@ public class Auditor {
         if (schema == null || schema.isEmpty()) schema = "-";
         if (driver == null || driver.isEmpty()) driver = "-";
 
-        String timestamp = DateTimeFormatter.ISO_INSTANT.format(Instant.now());
+        String timestamp = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault()).format(Instant.now());
         StringBuilder header = new StringBuilder();
         header.append("AUDIT_TIME=").append(timestamp).append("\n")
             .append("AUDIT_CONNECTION=").append(connection).append("\n")
