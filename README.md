@@ -26,10 +26,14 @@ Built on **MCP (Model Context Protocol)** using **Java 11 and JDBC**. Just add t
 - **always_review_ddl** — When `true`, all DDL (CREATE/ALTER/DROP etc.) triggers a confirmation window before execution.
 - **Danger keywords** — Two match modes: **whole_text** (substring anywhere in SQL, gatekeeper) and **command_match** (only when the SQL Parser identifies the statement as that command). Confirmation window: Windows uses PowerShell WinForms (scrollable HTML); macOS uses osascript.
 
+![db_mcp confirmation window](https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_confirmation_window.png)
+
 **Logging**
 
 - **audit_log** — Optional; writes each execution to a log file (e.g. 10MB rotation).
 - **mcp_console_log** — Optional; prints a short line to stderr per execute_sql / execute_sql_file (throttled).
+
+![db_mcp audit log](https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_audit_log.png)
 
 **Connection failures**
 
@@ -212,10 +216,14 @@ Replace paths with your actual paths. After saving `mcp.json`, **fully quit and 
 - **always_review_ddl** — 为 `true` 时，所有 DDL（CREATE/ALTER/DROP 等）执行前会弹出确认窗口。
 - **危险词** — 两种匹配方式：**whole_text**（SQL 中任意子串，焊门员）、**command_match**（仅当SQL解析器判定为该命令时）。确认窗口：Windows 使用 PowerShell WinForms（可滚动 HTML）；macOS 使用 osascript。
 
+![db_mcp 确认窗口](https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_confirmation_window.png)
+
 **日志**
 
 - **audit_log** — 可选；将每次执行写入日志文件（如 10MB 轮转）。
 - **mcp_console_log** — 可选；每笔 execute_sql / execute_sql_file 在 stderr 打一行简短日志（节流）。
+
+![db_mcp 审计日志](https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_audit_log.png)
 
 **连接失败**
 
