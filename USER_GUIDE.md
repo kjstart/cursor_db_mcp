@@ -99,7 +99,7 @@ cd db_mcp
 mvn package
 ```
 
-The fat JAR is in `db_mcp/target/` (e.g. `db-mcp-1.0.0-SNAPSHOT-fat.jar`). Put your driver JAR(s) in `db_mcp/lib/`. Use **`-cp` + main class** (not `-jar`) so both the fat JAR and `lib/*` are on the classpath.
+The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle part is your build version). Put your driver JAR(s) in `lib/`. Use **`-cp` + main class** (not `-jar`) so both the fat JAR and `lib/*` are on the classpath.
 
 ---
 
@@ -122,7 +122,7 @@ The fat JAR is in `db_mcp/target/` (e.g. `db-mcp-1.0.0-SNAPSHOT-fat.jar`). Put y
          "command": "java",
          "args": [
            "-cp",
-           "D:/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/path/to/db_mcp/lib/*",
+           "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*",
            "com.alvinliu.dbmcp.DBMCPServer"
          ],
          "env": {
@@ -132,7 +132,7 @@ The fat JAR is in `db_mcp/target/` (e.g. `db-mcp-1.0.0-SNAPSHOT-fat.jar`). Put y
      }
    }
    ```
-   Replace `D:/path/to/db_mcp` with your actual path (use forward slashes or escaped backslashes in JSON).
+   Replace `D:/path/to/db_mcp` with your actual path (use forward slashes or escaped backslashes in JSON). Replace `<version>` with your JAR version (e.g. `1.0.0-SNAPSHOT` when building from source, or the release version like `1.0.0` from a release zip).
 
    **Linux / macOS** — classpath separator `:`:
    ```json
@@ -142,7 +142,7 @@ The fat JAR is in `db_mcp/target/` (e.g. `db-mcp-1.0.0-SNAPSHOT-fat.jar`). Put y
          "command": "java",
          "args": [
            "-cp",
-           "/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar:/path/to/db_mcp/lib/*",
+           "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*",
            "com.alvinliu.dbmcp.DBMCPServer"
          ],
          "env": {
@@ -289,7 +289,7 @@ cd db_mcp
 mvn package
 ```
 
-生成的 fat JAR 在 `db_mcp/target/`（如 `db-mcp-1.0.0-SNAPSHOT-fat.jar`）。将驱动 JAR 放在 `db_mcp/lib/`。启动时使用 **`-cp` + 主类**（不要单独用 `-jar`），以便把 fat JAR 与 `lib/*` 都加入 classpath。
+生成的 fat JAR 在 `target/`（文件名形如 `db-mcp-*-fat.jar`，中间为当前构建版本号）。将驱动 JAR 放在 `lib/`。启动时使用 **`-cp` + 主类**（不要单独用 `-jar`），以便把 fat JAR 与 `lib/*` 都加入 classpath。
 
 ---
 
@@ -312,7 +312,7 @@ mvn package
          "command": "java",
          "args": [
            "-cp",
-           "D:/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/path/to/db_mcp/lib/*",
+           "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*",
            "com.alvinliu.dbmcp.DBMCPServer"
          ],
          "env": {
@@ -322,7 +322,7 @@ mvn package
      }
    }
    ```
-   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。
+   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。将 `<version>` 替换为你的 JAR 版本（如从源码构建时为 `1.0.0-SNAPSHOT`，使用发布包时为发布版本号如 `1.0.0`）。
 
    **Linux / macOS** — classpath 分隔符 `:`：
    ```json
@@ -332,7 +332,7 @@ mvn package
          "command": "java",
          "args": [
            "-cp",
-           "/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar:/path/to/db_mcp/lib/*",
+           "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*",
            "com.alvinliu.dbmcp.DBMCPServer"
          ],
          "env": {
@@ -342,6 +342,7 @@ mvn package
      }
    }
    ```
+   将 `<version>` 替换为你的 JAR 版本（如从源码构建时为 `1.0.0-SNAPSHOT`，使用发布包时为发布版本号如 `1.0.0`）。
 
 3. **重启 Cursor**
    - 保存 `mcp.json` 后**完全退出并重新打开 Cursor**，以加载 MCP 服务。
