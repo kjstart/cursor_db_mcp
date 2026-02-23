@@ -191,6 +191,7 @@ Replace paths with your actual paths. After saving `mcp.json`, **fully quit and 
 
 **项目地址:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
+**视频教程:** [https://www.bilibili.com/video/BV127fKB3EuR/](https://www.bilibili.com/video/BV127fKB3EuR/)
 
 ## 功能
 
