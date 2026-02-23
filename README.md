@@ -3,7 +3,10 @@
 
 # Cursor Database MCP Server (Java 11 + JDBC)
 
-<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/cursor_db_mcp_poster.png" alt="logo" width="360" />
+<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/cursor_db_mcp_poster.jpg" alt="logo" width="360" />
+
+## Youtube Demo is available now: [https://www.youtube.com/watch?v=kySJBv6dPEo](https://www.youtube.com/watch?v=kySJBv6dPEo)
+
 
 Allows **Cursor** and **other MCP-compatible tools** to connect to **any JDBC-supported database** (Oracle, MySQL, PostgreSQL, SQL Server, and more).
 
@@ -188,6 +191,7 @@ Replace paths with your actual paths. After saving `mcp.json`, **fully quit and 
 
 **项目地址:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
+**视频教程:** [https://www.bilibili.com/video/BV127fKB3EuR/](https://www.bilibili.com/video/BV127fKB3EuR/)
 
 ## 功能
 
