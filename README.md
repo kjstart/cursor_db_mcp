@@ -6,7 +6,7 @@
 <img src="https://www.alvinliu.com/wp-content/uploads/2026/02/cursor_db_mcp_poster.jpg" alt="logo" width="360" />
 
 ## Youtube Demo is available now: [https://www.youtube.com/watch?v=kySJBv6dPEo](https://www.youtube.com/watch?v=kySJBv6dPEo)
-
+## 中文演示: [https://www.bilibili.com/video/BV127fKB3EuR/](https://www.bilibili.com/video/BV127fKB3EuR/)
 
 Allows **Cursor** and **other MCP-compatible tools** to connect to **any JDBC-supported database** (Oracle, MySQL, PostgreSQL, SQL Server, and more).
 
