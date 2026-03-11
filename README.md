@@ -28,7 +28,7 @@ Built on **MCP (Model Context Protocol)** using **Java 11 and JDBC**. Just add t
 
 **Review and safety** — Dangerous SQL or DDL can trigger a confirmation window before execution.
 
-<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_confirmation_window.png" alt="db_mcp confirmation window" />
+<img src="https://www.alvinliu.com/wp-content/uploads/2026/03/db_mcp_color_bar.png" alt="db_mcp confirmation window" />
 
 **Logging** — Optional audit log (file rotation) and stderr console log.
 
