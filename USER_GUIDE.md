@@ -8,7 +8,7 @@
 
 **Project:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
-This guide is for the **Java (db_mcp)** MCP server: any database with a JDBC driver (Oracle, MySQL, PostgreSQL, SQL Server, etc.) is supported. You need **Java 11+**, **Maven 3.x** (to build), the **fat JAR** from `mvn package`, and the **JDBC driver JAR(s)** for your database. Configuration is in `config.yaml` (copy from `config.yaml.example`).
+This guide covers the **db_mcp** MCP server for **any MCP-compatible AI client** (Cursor, Claude Code, OpenClaw, etc.). It supports **any JDBC database** (Oracle, MySQL, PostgreSQL, SQL Server, and more). You need **Java 11+**, **Maven 3.x** (to build), the **fat JAR** from `mvn package`, and **JDBC driver JAR(s)** for your database. Configuration is in `config.yaml` (copy from `config.yaml.example`).
 
 ---
 
@@ -25,8 +25,8 @@ This guide is for the **Java (db_mcp)** MCP server: any database with a JDBC dri
    - **PostgreSQL:** [PostgreSQL JDBC](https://jdbc.postgresql.org/download/) or Maven.
    - **SQL Server:** [Microsoft JDBC Driver](https://docs.microsoft.com/en-us/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server).
 
-3. **Place driver JAR(s) for Cursor MCP**
-   - When running via Cursor, put the driver JAR(s) in `db_mcp/lib/` (or the directory you use in the `-cp` in section 4). The fat JAR does **not** include drivers.
+3. **Place driver JAR(s)**
+   - Put the driver JAR(s) in `db_mcp/lib/` (or the directory you use in the classpath when configuring your MCP client in section 4). The fat JAR does **not** include drivers.
 
 ---
 
@@ -78,7 +78,7 @@ This guide is for the **Java (db_mcp)** MCP server: any database with a JDBC dri
    **Review and logging** are optional. Omit the `review` and `logging` sections to disable. See `config.yaml.example` for `whole_text_match`, `command_match`, `always_review_ddl`, `audit_log`, `mcp_console_log`, and `log_file`.
 
 3. **Config file location**
-   - Keep `config.yaml` in a known location and set the environment variable **`DB_MCP_CONFIG`** to its **absolute path** in Cursor's MCP config (section 3). The server looks for config at `DB_MCP_CONFIG` first.
+   - Keep `config.yaml` in a known location and set the environment variable **`DB_MCP_CONFIG`** to its **absolute path** when you configure the MCP server in your client (section 4). The server reads config from `DB_MCP_CONFIG` first.
 
 ---
 
@@ -92,7 +92,7 @@ mvn compile
 mvn exec:java -Dexec.mainClass="com.alvinliu.dbmcp.DBMCPServer"
 ```
 
-To build a **fat JAR** (needed for Cursor):
+To build a **fat JAR** (needed for MCP clients):
 
 ```bash
 cd db_mcp
@@ -103,7 +103,11 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
 
 ---
 
-## 4. Configure the MCP server in Cursor
+## 4. Configure the MCP server in your client
+
+Attach db_mcp to your AI client by running the server over **stdio**. Paths below use placeholders: replace them with your actual install path and config file. Use the fat JAR version you built (e.g. `1.0.0-SNAPSHOT` from source).
+
+### 4.1 Cursor
 
 1. **Open MCP settings**
    - In Cursor: **File** → **Preferences** → **Cursor Settings** → **MCP**
@@ -132,7 +136,7 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
      }
    }
    ```
-   Replace `D:/path/to/db_mcp` with your actual path (use forward slashes or escaped backslashes in JSON). Replace `<version>` with your JAR version (e.g. `1.0.0-SNAPSHOT` when building from source, or the release version like `1.0.0` from a release zip).
+   Replace `D:/path/to/db_mcp` with your actual path (use forward slashes or escaped backslashes in JSON). Replace `<version>` with your JAR version (e.g. `1.0.0-SNAPSHOT`).
 
    **Linux / macOS** — classpath separator `:`:
    ```json
@@ -160,15 +164,55 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
    - If database MCP tools (`list_connections`, `execute_sql`, `execute_sql_file`, `query_to_csv_file`, `query_to_text_file`) appear in your chat, the setup is working.
    - With multiple databases: call `list_connections` to see names, then use `execute_sql` (or other tools) with `"connection": "database1"` to run on a specific database.
 
+### 4.2 Claude Code
+
+Use the **Claude Code** CLI to add db_mcp as an MCP server. Run one of the following in a terminal, then replace the path placeholders with your actual paths and `<version>` with your JAR version (e.g. `1.0.0-SNAPSHOT`).
+
+**Windows** — classpath separator `;`:
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="D:/path/to/db_mcp/config.yaml" -- java -cp "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+**Linux / macOS** — classpath separator `:`:
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="/path/to/db_mcp/config.yaml" -- java -cp "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+Example (Windows, real paths):
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="D:/work/code/db_mcp/config.yaml" -- java -cp "D:/work/code/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/work/code/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+After adding, Claude Code can use the db_mcp tools. To remove: `claude mcp remove db-mcp`.
+
+### 4.3 OpenClaw
+
+In **OpenClaw**, you add an MCP server by **sending a conversation message**. Paste one of the following messages (replace path placeholders with your actual paths and `<version>` with your JAR version, e.g. `1.0.0-SNAPSHOT`).
+
+**Windows** — use backslashes in paths; classpath separator `;`:
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp "D:\path\to\db_mcp\target\db-mcp-<version>-fat.jar;D:\path\to\db_mcp\lib\*" com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to 'D:\path\to\db_mcp\config.yaml'.
+```
+
+**Linux / macOS** — classpath separator `:`:
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp /path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/* com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to '/path/to/db_mcp/config.yaml'.
+```
+
+Example (Windows, real paths):
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp "D:\work\code\db_mcp\target\db-mcp-1.0.0-SNAPSHOT-fat.jar;D:\work\code\db_mcp\lib\*" com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to 'D:\work\code\db_mcp\config.yaml'.
+```
+
 ---
 
 ## 5. Tools and behaviour
 
 - **list_connections** — List configured connection names, availability, and `db_type`. Each call re-checks connections; previously failed ones are retried. Use the returned names as the `connection` argument in other tools.
-- **execute_sql** — Run SQL on the chosen connection (multi-statement supported, semicolon-separated). Params: `sql`, optional `connection`. Dangerous keywords or DDL (if `always_review_ddl` is true) open a **confirmation window** (Windows: PowerShell WinForms; macOS: osascript). You must confirm before execution.
-- **execute_sql_file** — Read SQL from a file, apply the same review rules as `execute_sql`, then execute. **Callers must use an absolute path** for `file_path`. Trailing SQL*Plus `/`-only lines are stripped. Params: `file_path`, optional `connection`.
-- **query_to_csv_file** — Run a query and write the result to a file as CSV (header + rows, UTF-8). Params: `sql`, `file_path` (absolute), optional `connection`. No confirmation dialog.
-- **query_to_text_file** — Run a query and write the result to a file as plain text (tab-separated columns per line). Params: `sql`, `file_path` (absolute), optional `connection`. No confirmation dialog.
+- **execute_sql** — Run SQL on the chosen connection (multi-statement, semicolon-separated). Supports JDBC escape `{ call proc() }` / `{ ? = call func(?) }` for stored procedures/functions; on Oracle only, anonymous blocks (`BEGIN...END`, `DECLARE...BEGIN...END`) are supported. Params: `sql`, optional `connection`. Some SQL may require user approval; if rejected, the client receives an execution-cancelled result.
+- **execute_sql_file** — Read SQL from a file, apply the same rules as `execute_sql`, then execute. **Callers must use an absolute path** for `file_path`. Trailing SQL*Plus `/`-only lines are stripped. Params: `file_path`, optional `connection`.
+- **query_to_csv_file** — Run a query and write the result to a file as CSV (header + rows, UTF-8). Params: `sql`, `file_path` (absolute), optional `connection`.
+- **query_to_text_file** — Run a query and write the result to a file as plain text (tab-separated columns per line). Params: `sql`, `file_path` (absolute), optional `connection`.
 
 **Audit log** (if enabled in config): each entry includes connection and database info so you can see which database was used.
 
@@ -180,11 +224,11 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
 
 | Symptom | Likely cause | What to do |
 |--------|----------------|------------|
-| "java" not found or wrong version | Java not installed or not on PATH | Install Java 11+ and ensure `java` is on the PATH used by Cursor when it starts the MCP process. |
-| ClassNotFoundException (driver) | JDBC driver JAR not on classpath | Put the driver JAR (e.g. `ojdbc11.jar`) in `db_mcp/lib/` and use `-cp` with `.../db_mcp/target/fat.jar;.../db_mcp/lib/*` (Windows) or `.../db_mcp/lib/*` (Linux/macOS). Do not use `-jar` alone. |
+| "java" not found or wrong version | Java not installed or not on PATH | Install Java 11+ and ensure `java` is on the PATH used by your client when it starts the MCP process. |
+| ClassNotFoundException (driver) | JDBC driver JAR not on classpath | Put the driver JAR (e.g. `ojdbc11.jar`) in `db_mcp/lib/` and use `-cp` with `.../db_mcp/target/*-fat.jar` and `.../db_mcp/lib/*` (Windows: `;`, Linux/macOS: `:`). Do not use `-jar` alone. |
 | Error about missing config | Config file not found | Set `DB_MCP_CONFIG` in the MCP `env` to the **absolute path** of `config.yaml`. |
 | Connection unavailable / fast-fail | Database down or unreachable | Check the database and network. Then call **list_connections** again to re-validate; only that tool clears the unavailable state. |
-| Database tools not visible in Cursor | MCP not loaded or wrong path | Check the `command` and `args` in `mcp.json` (paths, classpath separator), ensure the fat JAR and `lib/*` are correct, and restart Cursor. |
+| Database tools not visible in client | MCP not loaded or wrong path | Check the `command` and `args` in your client's MCP config (paths, classpath separator), ensure the fat JAR and `lib/*` are correct, and restart the client. |
 
 ---
 
@@ -198,7 +242,7 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
 
 **项目地址:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
-本指南面向 **Java 版（db_mcp）** MCP 服务端：支持任意提供 JDBC 驱动的数据库（Oracle、MySQL、PostgreSQL、SQL Server 等）。需要 **Java 11+**、**Maven 3.x**（用于构建）、通过 `mvn package` 得到的 **fat JAR**，以及所用数据库的 **JDBC 驱动 JAR**。配置写在 `config.yaml` 中（可从 `config.yaml.example` 复制后修改）。
+本指南面向 **db_mcp** MCP 服务端，适用于 **任意支持 MCP 的 AI 客户端**（Cursor、Claude Code 等）。支持 **任意 JDBC 数据库**（Oracle、MySQL、PostgreSQL、SQL Server 等）。需要 **Java 11+**、**Maven 3.x**（用于构建）、通过 `mvn package` 得到的 **fat JAR**，以及所用数据库的 **JDBC 驱动 JAR**。配置写在 `config.yaml` 中（可从 `config.yaml.example` 复制后修改）。
 
 ---
 
@@ -215,8 +259,8 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
    - **PostgreSQL：** [PostgreSQL JDBC](https://jdbc.postgresql.org/download/) 或 Maven。
    - **SQL Server：** [Microsoft JDBC Driver](https://docs.microsoft.com/zh-cn/sql/connect/jdbc/download-microsoft-jdbc-driver-for-sql-server)。
 
-3. **为 Cursor MCP 准备驱动 JAR**
-   - 通过 Cursor 运行时，将驱动 JAR 放在 `db_mcp/lib/`（或你在第 4 步 `-cp` 中使用的目录）。fat JAR **不包含** 驱动，需单独放置。
+3. **放置驱动 JAR**
+   - 将驱动 JAR 放在 `db_mcp/lib/`（或你在第 4 步配置 MCP 客户端时 classpath 中使用的目录）。fat JAR **不包含** 驱动，需单独放置。
 
 ---
 
@@ -268,7 +312,7 @@ The fat JAR is in `target/` (filename pattern: `db-mcp-*-fat.jar`; the middle pa
    **审查与日志** 为可选。不配置 `review` 和 `logging` 即不启用。完整示例见 `config.yaml.example`（`whole_text_match`、`command_match`、`always_review_ddl`、`audit_log`、`mcp_console_log`、`log_file`）。
 
 3. **配置文件位置**
-   - 将 `config.yaml` 放在固定位置，并在 Cursor 的 MCP 配置（第 4 步）中设置环境变量 **`DB_MCP_CONFIG`** 为其 **绝对路径**。服务端优先读取该路径。
+   - 将 `config.yaml` 放在固定位置，并在客户端 MCP 配置（第 4 步）中设置环境变量 **`DB_MCP_CONFIG`** 为其 **绝对路径**。服务端优先读取该路径。
 
 ---
 
@@ -282,7 +326,7 @@ mvn compile
 mvn exec:java -Dexec.mainClass="com.alvinliu.dbmcp.DBMCPServer"
 ```
 
-若要打 **fat JAR**（供 Cursor 使用）：
+若要打 **fat JAR**（供 MCP 客户端使用）：
 
 ```bash
 cd db_mcp
@@ -293,7 +337,11 @@ mvn package
 
 ---
 
-## 4. 在 Cursor 中配置 MCP 服务
+## 4. 在客户端中配置 MCP 服务
+
+通过 **stdio** 启动 db_mcp 并挂到你的 AI 客户端。以下路径为占位符，请替换为你的实际安装路径和配置文件；`<version>` 替换为你的 JAR 版本（如从源码构建时为 `1.0.0-SNAPSHOT`）。
+
+### 4.1 Cursor
 
 1. **打开 MCP 设置**
    - Cursor：**File** → **Preferences** → **Cursor Settings** → **MCP**
@@ -322,7 +370,7 @@ mvn package
      }
    }
    ```
-   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。将 `<version>` 替换为你的 JAR 版本（如从源码构建时为 `1.0.0-SNAPSHOT`，使用发布包时为发布版本号如 `1.0.0`）。
+   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。将 `<version>` 替换为你的 JAR 版本（如 `1.0.0-SNAPSHOT`）。
 
    **Linux / macOS** — classpath 分隔符 `:`：
    ```json
@@ -342,7 +390,6 @@ mvn package
      }
    }
    ```
-   将 `<version>` 替换为你的 JAR 版本（如从源码构建时为 `1.0.0-SNAPSHOT`，使用发布包时为发布版本号如 `1.0.0`）。
 
 3. **重启 Cursor**
    - 保存 `mcp.json` 后**完全退出并重新打开 Cursor**，以加载 MCP 服务。
@@ -351,15 +398,55 @@ mvn package
    - 若对话中出现数据库相关 MCP 工具（`list_connections`、`execute_sql`、`execute_sql_file`、`query_to_csv_file`、`query_to_text_file`），说明配置成功。
    - 多数据库时：先调用 `list_connections` 查看名称，再在 `execute_sql` 等工具中传入 `"connection": "database1"` 对指定库执行。
 
+### 4.2 Claude Code
+
+使用 **Claude Code** 命令行将 db_mcp 添加为 MCP 服务。在终端中执行下面其中一条命令，并将路径占位符替换为你的实际路径，`<version>` 替换为你的 JAR 版本（如 `1.0.0-SNAPSHOT`）。
+
+**Windows** — classpath 分隔符 `;`：
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="D:/path/to/db_mcp/config.yaml" -- java -cp "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+**Linux / macOS** — classpath 分隔符 `:`：
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="/path/to/db_mcp/config.yaml" -- java -cp "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+示例（Windows，真实路径）：
+```bash
+claude mcp add db-mcp -e DB_MCP_CONFIG="D:/work/code/db_mcp/config.yaml" -- java -cp "D:/work/code/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/work/code/db_mcp/lib/*" com.alvinliu.dbmcp.DBMCPServer
+```
+
+添加后，Claude Code 即可使用 db_mcp 提供的工具。移除服务：`claude mcp remove db-mcp`。
+
+### 4.3 OpenClaw
+
+在 **OpenClaw** 中，通过**发送一条对话消息**添加 MCP 服务。将下面其中一条消息粘贴发送（将路径占位符替换为本机实际路径，`<version>` 替换为你的 JAR 版本，如 `1.0.0-SNAPSHOT`）。
+
+**Windows** — 路径使用反斜杠；classpath 分隔符 `;`：
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp "D:\path\to\db_mcp\target\db-mcp-<version>-fat.jar;D:\path\to\db_mcp\lib\*" com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to 'D:\path\to\db_mcp\config.yaml'.
+```
+
+**Linux / macOS** — classpath 分隔符 `:`：
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp /path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/* com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to '/path/to/db_mcp/config.yaml'.
+```
+
+示例（Windows，真实路径）：
+```
+Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp "D:\work\code\db_mcp\target\db-mcp-1.0.0-SNAPSHOT-fat.jar;D:\work\code\db_mcp\lib\*" com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to 'D:\work\code\db_mcp\config.yaml'.
+```
+
 ---
 
 ## 5. 工具与行为
 
 - **list_connections** — 列出已配置连接名称、可用性及 `db_type`。每次调用会重新检查连接，对之前失败的连接会重试。将返回的名称作为其他工具的 `connection` 参数使用。
-- **execute_sql** — 在指定连接上执行 SQL（支持多语句，分号分隔）。参数：`sql`，可选 `connection`。命中危险词或 DDL（若 `always_review_ddl` 为 true）时会弹出 **确认窗口**（Windows：PowerShell WinForms；macOS：osascript），需确认后才会执行。
-- **execute_sql_file** — 从文件读取 SQL，应用与 `execute_sql` 相同的审查规则后执行。**调用方请对 `file_path` 使用绝对路径**。末尾仅含 `/` 的 SQL*Plus 行会被去除。参数：`file_path`，可选 `connection`。
-- **query_to_csv_file** — 执行查询并将结果以 CSV（表头 + 行，UTF-8）写入文件。参数：`sql`、`file_path`（绝对路径）、可选 `connection`。无确认对话框。
-- **query_to_text_file** — 执行查询并将结果以纯文本（每行制表符分隔列）写入文件。参数：`sql`、`file_path`（绝对路径）、可选 `connection`。无确认对话框。
+- **execute_sql** — 在指定连接上执行 SQL（支持多语句，分号分隔）。支持 JDBC 转义 `{ call proc() }` / `{ ? = call func(?) }` 调用存储过程/函数；仅 Oracle 支持匿名块（`BEGIN...END`、`DECLARE...BEGIN...END`）。参数：`sql`，可选 `connection`。部分 SQL 可能需用户确认；若用户拒绝，客户端会收到执行已取消的结果。
+- **execute_sql_file** — 从文件读取 SQL，应用与 `execute_sql` 相同规则后执行。**调用方请对 `file_path` 使用绝对路径**。末尾仅含 `/` 的 SQL*Plus 行会被去除。参数：`file_path`，可选 `connection`。
+- **query_to_csv_file** — 执行查询并将结果以 CSV（表头 + 行，UTF-8）写入文件。参数：`sql`、`file_path`（绝对路径）、可选 `connection`。
+- **query_to_text_file** — 执行查询并将结果以纯文本（每行制表符分隔列）写入文件。参数：`sql`、`file_path`（绝对路径）、可选 `connection`。
 
 **审计日志**（若在配置中启用）：每条记录包含连接与数据库信息，便于查看使用的数据库。
 
@@ -371,8 +458,8 @@ mvn package
 
 | 现象 | 可能原因 | 处理 |
 |--------|----------------|------------|
-| 找不到 "java" 或版本不对 | 未安装 Java 或未加入 PATH | 安装 Java 11+，并确保 Cursor 启动 MCP 时使用的 PATH 中包含 `java`。 |
-| ClassNotFoundException（驱动类） | JDBC 驱动 JAR 不在 classpath | 将驱动 JAR（如 `ojdbc11.jar`）放入 `db_mcp/lib/`，并使用 `-cp` 包含 `.../db_mcp/target/fat.jar;.../db_mcp/lib/*`（Windows）或 `.../db_mcp/lib/*`（Linux/macOS）。不要单独使用 `-jar`。 |
+| 找不到 "java" 或版本不对 | 未安装 Java 或未加入 PATH | 安装 Java 11+，并确保客户端启动 MCP 时使用的 PATH 中包含 `java`。 |
+| ClassNotFoundException（驱动类） | JDBC 驱动 JAR 不在 classpath | 将驱动 JAR（如 `ojdbc11.jar`）放入 `db_mcp/lib/`，并使用 `-cp` 包含 `.../db_mcp/target/*-fat.jar` 与 `.../db_mcp/lib/*`（Windows 用 `;`，Linux/macOS 用 `:`）。不要单独使用 `-jar`。 |
 | 报错找不到 config | 未找到配置文件 | 在 MCP 的 `env` 中设置 `DB_MCP_CONFIG` 为 `config.yaml` 的 **绝对路径**。 |
 | 连接不可用 / 快速失败 | 数据库不可达或宕机 | 检查数据库与网络后，再次调用 **list_connections** 重新校验；只有该工具会清除不可用状态。 |
-| Cursor 中看不到数据库工具 | MCP 未加载或路径错误 | 检查 `mcp.json` 中的 `command` 和 `args`（路径、classpath 分隔符），确认 fat JAR 与 `lib/*` 正确，并重启 Cursor。 |
+| 客户端中看不到数据库工具 | MCP 未加载或路径错误 | 检查客户端 MCP 配置中的 `command` 和 `args`（路径、classpath 分隔符），确认 fat JAR 与 `lib/*` 正确，并重启客户端。 |

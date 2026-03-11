@@ -1,32 +1,31 @@
 <a id="english"></a>
 [English](#english) | [中文](#chinese)
 
-# Cursor Database MCP Server (Java 11 + JDBC)
+# db_mcp — Database MCP Server for AI (Java 11 + JDBC)
 
-<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/cursor_db_mcp_poster.jpg" alt="logo" width="360" />
+<img src="https://www.alvinliu.com/wp-content/uploads/2026/03/cursor_db_mcp_poster2.png" alt="logo" width="360" />
 
-## Youtube Demo is available now: [https://www.youtube.com/watch?v=kySJBv6dPEo](https://www.youtube.com/watch?v=kySJBv6dPEo)
-## 中文演示: [https://www.bilibili.com/video/BV127fKB3EuR/](https://www.bilibili.com/video/BV127fKB3EuR/)
+A **general-purpose MCP server** that lets **any MCP-compatible AI client** (Cursor, Claude Code, OpenClaw, etc.) connect to **any JDBC-supported database** (Oracle, MySQL, PostgreSQL, SQL Server, and more). Not tied to a single IDE or tool.
 
-Allows **Cursor** and **other MCP-compatible tools** to connect to **any JDBC-supported database** (Oracle, MySQL, PostgreSQL, SQL Server, and more).
+**Built-in safety** — Optionally asks for human confirmation before running risky SQL, helping prevent accidental data loss.
 
-Includes **built-in safety checks** that ask for confirmation before running potentially dangerous SQL, helping prevent accidental data loss.
-
-Built on **MCP (Model Context Protocol)** using **Java 11 and JDBC**. Just add the JDBC driver JAR and configure your database connection to get started.
+Built on **MCP (Model Context Protocol)** with **Java 11 and JDBC**. Add the JDBC driver JAR, configure your database in `config.yaml`, and attach the server to your AI client. See **USER_GUIDE.md** for step-by-step setup (Cursor, Claude Code, OpenClaw, and others).
 
 **Author:** Alvin Liu [https://alvinliu.com](https://alvinliu.com)
 
 **Project:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
+**Demos:** [YouTube](https://www.youtube.com/watch?v=kySJBv6dPEo) | [Bilibili 中文](https://www.bilibili.com/video/BV127fKB3EuR/)
+
 ## Features
 
-- **list_connections** — List configured database connections and their availability.
-- **execute_sql** — Execute SQL query and simple procedures.
-- **execute_sql_file** — Read SQL from a file to run complex SQL.
-- **query_to_csv_file** — Run a query and write the result to a file as CSV, for larger result sets.
-- **query_to_text_file** — Run a query and write the result to a file as plain text (for AI to read stored procedures).
+- **list_connections** — List configured database connections and their availability (`db_type`, etc.).
+- **execute_sql** — Execute SQL (multi-statement), call stored procedures/functions (JDBC `{ call }`), and on Oracle run anonymous PL/SQL blocks (`BEGIN...END`).
+- **execute_sql_file** — Run SQL from a file (same rules as execute_sql).
+- **query_to_csv_file** — Run a query and write the result to a CSV file.
+- **query_to_text_file** — Run a query and write the result to a text file (e.g. procedure source).
 
-**Review and safety** — Dangerous SQL or DDL can trigger a confirmation window before execution.
+**Review and safety** — When enabled in config, some SQL may require user approval before execution; if rejected, the client receives an execution-cancelled result.
 
 <img src="https://www.alvinliu.com/wp-content/uploads/2026/03/db_mcp_color_bar.png" alt="db_mcp confirmation window" />
 
@@ -122,92 +121,49 @@ mvn package
 
 The fat JAR includes the project plus snakeyaml, gson, etc.; it does **not** include JDBC drivers. Put the fat JAR in `db_mcp/target/` (from `mvn package`) and driver JAR(s) in `db_mcp/lib/`, and start with `-cp` (see below). The JVM ignores `-cp` when using `-jar`, so you must use **`-cp` + main class** to put both the fat JAR and `lib/*` on the classpath.
 
-## Cursor MCP setup
+## Attach to your AI client (MCP)
 
-The server talks to Cursor over **stdio**. Add a **command**-type MCP server in Cursor.
+The server communicates over **stdio**. How you add it depends on your client:
 
-**Config file**
+- **Cursor** — Add a command-type MCP in Cursor settings; see **USER_GUIDE.md** for `mcp.json` examples (Windows and Linux/macOS).
+- **Claude Code** — Use `claude mcp add ...`; see **USER_GUIDE.md** for the exact command and path placeholders.
+- **OpenClaw** — Add the MCP server by sending a conversation message; see **USER_GUIDE.md** for the exact text and path placeholders.
 
-- Project-only: create `.cursor/mcp.json` in the project root.
-- User-wide: edit `~/.cursor/mcp.json` (Windows: `%USERPROFILE%\.cursor\mcp.json`).
-
-**Example (Windows)** — classpath separator `;`:
-
-```json
-{
-  "mcpServers": {
-    "db-mcp": {
-      "command": "java",
-      "args": [
-        "-cp",
-        "D:/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/path/to/db_mcp/lib/*",
-        "com.alvinliu.dbmcp.DBMCPServer"
-      ],
-      "env": {
-        "DB_MCP_CONFIG": "D:/path/to/db_mcp/config.yaml"
-      }
-    }
-  }
-}
-```
-
-**Example (Linux / macOS)** — classpath separator `:`:
-
-```json
-{
-  "mcpServers": {
-    "db-mcp": {
-      "command": "java",
-      "args": [
-        "-cp",
-        "/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar:/path/to/db_mcp/lib/*",
-        "com.alvinliu.dbmcp.DBMCPServer"
-      ],
-      "env": {
-        "DB_MCP_CONFIG": "/path/to/db_mcp/config.yaml"
-      }
-    }
-  }
-}
-```
-
-Replace paths with your actual paths. After saving `mcp.json`, **fully quit and reopen Cursor** so the MCP reloads. Cursor can then call these tools when you chat (e.g. `list_connections`, `execute_sql`, `execute_sql_file`, `query_to_csv_file`, `query_to_text_file`).
-
-**Driver JARs** — Put your database driver JAR(s) (e.g. Oracle `ojdbc11.jar`) in `db_mcp/lib/`. The project does not ship drivers.
+Replace path placeholders with your actual install path and config file. **Driver JARs** go in `db_mcp/lib/` (e.g. Oracle `ojdbc11.jar`); the project does not bundle drivers.
 
 ---
 <a id="chinese"></a>
 [English](#english) | [中文](#chinese)
 
-# Cursor Database MCP Server（Java 11 + JDBC）
+# db_mcp — 面向 AI 的通用数据库 MCP 服务（Java 11 + JDBC）
 
-支持 **Cursor** 及其他 **MCP 兼容工具** 连接任何 **支持 JDBC 的数据库**，包括 Oracle、MySQL、PostgreSQL、SQL Server 等，无需针对不同数据库做额外适配。
+面向 **任意支持 MCP 的 AI 客户端**（Cursor、Claude Code 等）连接 **任意支持 JDBC 的数据库**（Oracle、MySQL、PostgreSQL、SQL Server 等），不绑定某一款 IDE 或工具。
 
-**内置 SQL 安全校验机制**，在执行可能存在风险的 SQL 操作前会主动请求确认，帮助避免误操作导致的数据丢失。
+**可选安全确认** — 在配置中开启后，部分 SQL 执行前会要求用户确认；若用户拒绝，客户端将收到执行已取消的结果。
 
-基于 **MCP（Model Context Protocol）** 构建，使用 **Java 11 + JDBC** 实现。只需将对应的 JDBC Driver JAR 加入运行环境，并配置数据库连接即可使用。
+基于 **MCP（Model Context Protocol）**，使用 **Java 11 + JDBC**。将 JDBC 驱动 JAR 加入 classpath、在 `config.yaml` 中配置数据库后，把本服务挂到你的 AI 客户端即可。详细步骤见 **USER_GUIDE.md**（含 Cursor、Claude Code 等）。
 
 **作者:** Alvin Liu [https://alvinliu.com](https://alvinliu.com)
 
 **项目地址:** [https://github.com/kjstart/cursor_db_mcp](https://github.com/kjstart/cursor_db_mcp)
 
-**视频教程:** [https://www.bilibili.com/video/BV127fKB3EuR/](https://www.bilibili.com/video/BV127fKB3EuR/)
+**演示:** [YouTube](https://www.youtube.com/watch?v=kySJBv6dPEo) | [B站中文](https://www.bilibili.com/video/BV127fKB3EuR/)
 
 ## 功能
 
-- **list_connections** — 列出配置的数据库连接及可用性。
-- **execute_sql** — 执行 SQL 或简单存储过程。
-- **execute_sql_file** — 从文件读取并执行 SQL，适合较长脚本。
-- **query_to_csv_file** — 执行查询并将结果写入 CSV 文件，适合大量数据。
-- **query_to_text_file** — 执行查询并将结果写入纯文本，便于 AI 阅读（如存储过程源码）。
+- **list_connections** — 列出已配置连接及可用性（含 db_type 等）。
+- **execute_sql** — 执行 SQL（支持多语句）、调用存储过程/函数（JDBC `{ call }`），Oracle 下还可执行匿名块（`BEGIN...END`）。
+- **execute_sql_file** — 从文件执行 SQL，规则同 execute_sql。
+- **query_to_csv_file** — 执行查询并写入 CSV 文件。
+- **query_to_text_file** — 执行查询并写入纯文本（如存储过程源码）。
 
-**审查与安全** — 危险 SQL 或 DDL 执行前会弹确认窗口。
+**审查与安全** — 在配置中启用后，部分 SQL 需用户确认后才执行；若用户拒绝，客户端会收到执行已取消。
 
-<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_confirmation_window.png" alt="db_mcp 确认窗口" width="560" />
+<img src="https://www.alvinliu.com/wp-content/uploads/2026/03/db_mcp_color_bar.png" alt="db_mcp confirmation window" />
 
 **日志** — 可选审计日志（按文件轮转）和 stderr 控制台日志。
 
-<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_audit_log.png" alt="db_mcp 审计日志" width="560" />
+<img src="https://www.alvinliu.com/wp-content/uploads/2026/02/db_mcp_audit_log.png" alt="db_mcp 审计日志"/>
 
 ## 配置
 
@@ -297,55 +253,12 @@ mvn package
 
 Fat JAR 含本工程及 snakeyaml、gson 等，**不含** JDBC 驱动。将 fat JAR 放在 `db_mcp/target/`（由 `mvn package` 生成），驱动 JAR 放在 `db_mcp/lib/`，并用 `-cp` 启动（见下）。JVM 规定使用 `-jar` 时会忽略 `-cp`，因此需用 **`-cp` + 主类** 方式，把 fat JAR 与 `lib/*` 都放进 classpath。
 
-## 在 Cursor 中配置 MCP
+## 挂载到 AI 客户端（MCP）
 
-服务通过 **stdio** 与 Cursor 通信。在 Cursor 的 MCP 配置中增加一条「命令」型服务器。
+服务通过 **stdio** 与客户端通信。按你使用的客户端配置：
 
-**配置文件位置**
+- **Cursor** — 在 Cursor 设置中添加「命令」型 MCP，详见 **USER_GUIDE.md** 中的 `mcp.json` 示例（Windows / Linux / macOS）。
+- **Claude Code** — 使用 `claude mcp add ...`，详见 **USER_GUIDE.md** 中的命令与路径占位说明。
+- **OpenClaw** — 通过发送对话消息添加 MCP 服务，详见 **USER_GUIDE.md** 中的示例文案与路径占位。
 
-- 仅当前项目：在项目根目录创建 `.cursor/mcp.json`。
-- 本机全局：编辑 `~/.cursor/mcp.json`（Windows：`%USERPROFILE%\.cursor\mcp.json`）。
-
-**示例（Windows）** — classpath 分隔符 `;`：
-
-```json
-{
-  "mcpServers": {
-    "db-mcp": {
-      "command": "java",
-      "args": [
-        "-cp",
-        "D:/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar;D:/path/to/db_mcp/lib/*",
-        "com.alvinliu.dbmcp.DBMCPServer"
-      ],
-      "env": {
-        "DB_MCP_CONFIG": "D:/path/to/db_mcp/config.yaml"
-      }
-    }
-  }
-}
-```
-
-**示例（Linux / macOS）** — classpath 分隔符 `:`：
-
-```json
-{
-  "mcpServers": {
-    "db-mcp": {
-      "command": "java",
-      "args": [
-        "-cp",
-        "/path/to/db_mcp/target/db-mcp-1.0.0-SNAPSHOT-fat.jar:/path/to/db_mcp/lib/*",
-        "com.alvinliu.dbmcp.DBMCPServer"
-      ],
-      "env": {
-        "DB_MCP_CONFIG": "/path/to/db_mcp/config.yaml"
-      }
-    }
-  }
-}
-```
-
-将路径改为本机实际路径。保存 `mcp.json` 后**完全退出并重新打开 Cursor**，MCP 才会重新加载。之后 Cursor 在对话时即可调用这些工具（如 `list_connections`、`execute_sql`、`execute_sql_file`、`query_to_csv_file`、`query_to_text_file`）。
-
-**驱动 JAR** — 将所用数据库的驱动 JAR（如 Oracle `ojdbc11.jar`）放入 `db_mcp/lib/`。本工程不随包发布驱动。
+将文档中的路径占位替换为本机实际路径。**驱动 JAR** 放入 `db_mcp/lib/`（如 Oracle `ojdbc11.jar`），本工程不随包发布驱动。
