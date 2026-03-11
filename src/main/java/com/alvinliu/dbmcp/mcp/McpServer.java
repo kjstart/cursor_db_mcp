@@ -305,6 +305,7 @@ public class McpServer {
             req.setStatementType(analysis.getStatementType());
             req.setDdl(analysis.isDdl());
             req.setConnection(displayConnection);
+            req.setConnectionIndex(names.indexOf(connKey));
             req.setSourceLabel("File: " + path);
             req.setDatabaseName(dbName);
             req.setSchema(schema);
@@ -385,6 +386,7 @@ public class McpServer {
             req.setStatementType(analysis.getStatementType());
             req.setDdl(analysis.isDdl());
             req.setConnection(displayConnection);
+            req.setConnectionIndex(names.indexOf(connKey));
             req.setDatabaseName(dbName);
             req.setSchema(schema);
             req.setDriver(driver);

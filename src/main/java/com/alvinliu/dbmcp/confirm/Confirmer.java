@@ -14,8 +14,22 @@ import java.util.concurrent.TimeUnit;
  */
 public class Confirmer {
 
+    /** 10 distinct, light colors for connection header bar (by config order). Same hue as before, softened. */
+    private static final String[] HEADER_COLORS = {
+        "A5D6A7", /* 1  green   */
+        "90CAF9", /* 2  blue */
+        "FFCC80", /* 3  orange */
+        "CE93D8", /* 4  purple */
+        "F48FB1", /* 5  pink */
+        "80DEEA", /* 6  cyan */
+        "EF9A9A", /* 7  red */
+        "80CBC4", /* 8  teal */
+        "FFF59D", /* 9  yellow */
+        "BCAAA4", /* 10 brown */
+    };
+
     private static final String PS1_SCRIPT =
-        "param([string]$HtmlPath, [string]$ResultPath, [string]$HeaderPath, [string]$Connection = \"default\")\n"
+        "param([string]$HtmlPath, [string]$ResultPath, [string]$HeaderPath, [string]$Connection = \"default\", [string]$HeaderColor = \"A5D6A7\")\n"
         + "$Header = if (Test-Path $HeaderPath) { [System.IO.File]::ReadAllText($HeaderPath, [System.Text.Encoding]::UTF8) } else { \"Confirm SQL execution\" }\n"
         + "Add-Type -AssemblyName System.Windows.Forms\n"
         + "Add-Type -AssemblyName System.Drawing\n"
@@ -27,16 +41,22 @@ public class Confirmer {
         + "$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable\n"
         + "$form.MinimumSize = New-Object System.Drawing.Size(800, 600)\n"
         + "$form.TopMost = $true\n"
+        + "$headerPanel = New-Object System.Windows.Forms.Panel\n"
+        + "$headerPanel.Dock = [System.Windows.Forms.DockStyle]::Top\n"
+        + "$headerPanel.Height = 42\n"
+        + "if (-not $HeaderColor.StartsWith('#')) { $HeaderColor = '#' + $HeaderColor }\n"
+        + "try { $headerPanel.BackColor = [System.Drawing.ColorTranslator]::FromHtml($HeaderColor) } catch { $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(165, 214, 167) }\n"
         + "$lbl = New-Object System.Windows.Forms.Label\n"
         + "$lbl.Text = $Header.Trim()\n"
         + "$lbl.Location = New-Object System.Drawing.Point(10, 10)\n"
         + "$lbl.AutoSize = $true\n"
         + "$lbl.MaximumSize = New-Object System.Drawing.Size(960, 0)\n"
         + "if ($Connection -and $Connection -ne \"default\") { $lbl.Font = New-Object System.Drawing.Font($lbl.Font.FontFamily, $lbl.Font.Size, [System.Drawing.FontStyle]::Bold) }\n"
-        + "$form.Controls.Add($lbl)\n"
+        + "$headerPanel.Controls.Add($lbl)\n"
+        + "$form.Controls.Add($headerPanel)\n"
         + "$browser = New-Object System.Windows.Forms.WebBrowser\n"
-        + "$browser.Location = New-Object System.Drawing.Point(10, 40)\n"
-        + "$browser.Size = New-Object System.Drawing.Size(965, 620)\n"
+        + "$browser.Location = New-Object System.Drawing.Point(10, 42)\n"
+        + "$browser.Size = New-Object System.Drawing.Size(965, 618)\n"
         + "$browser.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor [System.Windows.Forms.AnchorStyles]::Bottom -bor [System.Windows.Forms.AnchorStyles]::Left -bor [System.Windows.Forms.AnchorStyles]::Right\n"
         + "$browser.ScrollBarsEnabled = $true\n"
         + "$browser.IsWebBrowserContextMenuEnabled = $false\n"
@@ -100,10 +120,12 @@ public class Confirmer {
             return false;
         }
         String conn = req.getConnection() != null && !req.getConnection().isEmpty() ? req.getConnection() : "default";
+        int idx = req.getConnectionIndex() >= 0 ? req.getConnectionIndex() : 0;
+        String headerColor = HEADER_COLORS[idx % HEADER_COLORS.length];
         ProcessBuilder pb = new ProcessBuilder(
             "powershell.exe", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-File", scriptPath.toString(),
             "-HtmlPath", htmlPath.toString(), "-ResultPath", resultPath.toString(),
-            "-HeaderPath", headerPath.toString(), "-Connection", conn);
+            "-HeaderPath", headerPath.toString(), "-Connection", conn, "-HeaderColor", headerColor);
         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
         try {
             Process p = pb.start();

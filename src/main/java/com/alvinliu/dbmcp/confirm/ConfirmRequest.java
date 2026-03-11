@@ -13,6 +13,8 @@ public class ConfirmRequest {
     private String statementType;            // backward compat / first action
     private boolean ddl;
     private String connection;
+    /** 0-based index in config connections list; used for header bar color. */
+    private int connectionIndex = -1;
     private String sourceLabel;
     private String databaseName;
     private String schema;
@@ -39,6 +41,9 @@ public class ConfirmRequest {
 
     public String getConnection() { return connection; }
     public void setConnection(String connection) { this.connection = connection; }
+
+    public int getConnectionIndex() { return connectionIndex; }
+    public void setConnectionIndex(int connectionIndex) { this.connectionIndex = connectionIndex; }
 
     public String getSourceLabel() { return sourceLabel; }
     public void setSourceLabel(String sourceLabel) { this.sourceLabel = sourceLabel; }
