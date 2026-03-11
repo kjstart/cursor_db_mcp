@@ -42,12 +42,9 @@ public class JdbcPool {
                 dataSources.put(e.getName(), ds);
                 available.put(e.getName(), true);
             } catch (Exception ex) {
-                System.err.println("[db_mcp] connection " + e.getName() + " failed: " + ex.getMessage());
+                // Mark unavailable but do not print any error; callers can inspect availability via API.
                 available.put(e.getName(), false);
             }
-        }
-        if (dataSources.isEmpty()) {
-            throw new IllegalArgumentException("no connection could be opened");
         }
     }
 

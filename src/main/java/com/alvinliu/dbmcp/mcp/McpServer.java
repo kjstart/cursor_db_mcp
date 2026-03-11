@@ -59,7 +59,7 @@ public class McpServer {
             try {
                 a = new Auditor(logFile);
             } catch (IOException e) {
-                System.err.println("[db_mcp] audit log init failed: " + e.getMessage());
+                // Audit log initialization failed; skip audit logging but do not write to stderr/stdout.
             }
         }
         this.auditor = a;
@@ -124,16 +124,16 @@ public class McpServer {
         List<Map<String, Object>> tools = new ArrayList<>();
         tools.add(tool(
             "execute_sql",
-            "Execute SQL against the configured database. When multiple connections are configured, use the 'connection' argument (call list_connections to see names). SQL that matches danger_keywords or DDL (if require_confirm_for_ddl) opens a confirmation window.",
+            "Execute SQL against the configured database. When multiple connections are configured, use the 'connection' argument (call list_connections to see names). Supports standard SQL (SELECT/INSERT/UPDATE/DELETE/DDL) and vendor-neutral stored procedure/function calls using JDBC escape syntax, e.g. \"{ call my_procedure() }\" or \"{ ? = call my_function(?) }\". For Oracle only, anonymous blocks (BEGIN...END or DECLARE...BEGIN...END) are supported; for other databases use stored procedure/function and call via \"{ call proc_name() }\". Some SQL may require user approval; if rejected, you will receive an execution cancelled result.",
             Map.of(
-                "sql", prop("string", "SQL to run: one or multiple statements (separated by semicolon)."),
+                "sql", prop("string", "SQL to run. For normal SQL, use one or multiple statements separated by semicolons. For Oracle, anonymous blocks (BEGIN...END or DECLARE...BEGIN...END) are supported. For stored procedures/functions on any database, use JDBC escape syntax \"{ call proc_name() }\" or \"{ ? = call func_name(?) }\". On non-Oracle databases do not send anonymous blocks; use procedures/functions and call them."),
                 "connection", prop("string", "Which configured database to use. Required when multiple connections; omit when only one.")
             ),
             List.of("sql")
         ));
         tools.add(tool(
             "execute_sql_file",
-            "Read SQL from a file, analyze it (same rules as execute_sql). If review is required (danger_keywords or DDL), a confirmation window shows the formatted file content. On approve, execute the file contents. File path is relative to server working directory unless absolute.",
+            "Read SQL from a file and execute it. Same rules as execute_sql. File path is relative to server working directory unless absolute.",
             Map.of(
                 "file_path", prop("string", "Absolute path to the SQL file (callers must use absolute path; relative path depends on server working directory and may fail)."),
                 "connection", prop("string", "Which configured database to use. Required when multiple connections; omit when only one.")
@@ -546,7 +546,7 @@ public class McpServer {
         if (msg.equals(lastVerboseMsg) && (now - lastVerboseAt) < 2000) return;
         lastVerboseMsg = msg;
         lastVerboseAt = now;
-        System.err.println(msg);
+        // Intentionally do not log to stderr/stdout to keep MCP stdio clean for clients.
     }
 
     private void sendResult(Object id, Object result) {

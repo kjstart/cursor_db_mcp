@@ -116,7 +116,7 @@ public class Confirmer {
             Files.writeString(headerPath, buildHeader(req), StandardCharsets.UTF_8);
             Files.writeString(scriptPath, PS1_SCRIPT, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            System.err.println("[db_mcp] confirm: " + e.getMessage());
+            System.err.println("[db_mcp] confirm: failed to prepare HTML/script: " + e.getMessage());
             return false;
         }
         String conn = req.getConnection() != null && !req.getConnection().isEmpty() ? req.getConnection() : "default";
@@ -131,7 +131,7 @@ public class Confirmer {
             Process p = pb.start();
             p.waitFor(5, TimeUnit.MINUTES);
         } catch (Exception e) {
-            System.err.println("[db_mcp] confirm: " + e.getMessage());
+            System.err.println("[db_mcp] confirm: failed to launch PowerShell dialog: " + e.getMessage());
             return false;
         } finally {
             try { Files.deleteIfExists(htmlPath); } catch (IOException ignored) {}
@@ -176,7 +176,7 @@ public class Confirmer {
             if (code == 1) return false;
             return out != null && out.contains("Execute");
         } catch (Exception e) {
-            System.err.println("[db_mcp] confirm: " + e.getMessage());
+            System.err.println("[db_mcp] confirm: failed to show macOS dialog: " + e.getMessage());
             return false;
         }
     }

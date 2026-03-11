@@ -26,7 +26,15 @@ public final class JdbcExecutor {
             result.setExecutionTimeMs(System.currentTimeMillis() - start);
             return result;
         }
-        String[] statements = isPlsqlDdl(sql) ? new String[] { sql } : splitStatements(sql);
+        String[] statements;
+        if (isPlsqlDdl(sql)) {
+            statements = new String[] { sql };
+        } else if (isOracle(conn) && isOracleAnonymousBlock(sql)) {
+            sql = stripTrailingSlashLine(sql).trim();
+            statements = sql.isEmpty() ? new String[0] : new String[] { sql };
+        } else {
+            statements = splitStatements(sql);
+        }
         ExecutionResult last = null;
         for (String stmt : statements) {
             stmt = stmt.trim();
@@ -48,6 +56,42 @@ public final class JdbcExecutor {
         }
         result.setExecutionTimeMs(System.currentTimeMillis() - start);
         return result;
+    }
+
+    /** True if the connection is to an Oracle database. */
+    private static boolean isOracle(Connection conn) {
+        try {
+            String product = conn.getMetaData() != null ? conn.getMetaData().getDatabaseProductName() : "";
+            return product != null && product.toUpperCase().contains("ORACLE");
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /** True if SQL is an Oracle PL/SQL anonymous block (BEGIN...END or DECLARE...BEGIN...END). */
+    private static boolean isOracleAnonymousBlock(String sql) {
+        if (sql == null) return false;
+        String u = sql.trim().toUpperCase();
+        return u.startsWith("BEGIN") || u.startsWith("DECLARE");
+    }
+
+    /** Remove trailing lines that are only "/" (SQL*Plus execute buffer command). */
+    private static String stripTrailingSlashLine(String s) {
+        if (s == null) return "";
+        while (true) {
+            s = s.replaceAll("\\r?\\n$", "");
+            int last = s.lastIndexOf('\n');
+            if (last < 0) {
+                if (s.trim().equals("/")) return "";
+                return s;
+            }
+            String line = s.substring(last + 1);
+            if (line.trim().equals("/")) {
+                s = s.substring(0, last);
+                continue;
+            }
+            return s;
+        }
     }
 
     /** True if SQL is PL/SQL DDL (CREATE FUNCTION/PROCEDURE/PACKAGE) and must be run as one statement. */
@@ -95,41 +139,135 @@ public final class JdbcExecutor {
     private static ExecutionResult executeOne(Connection conn, String sql) {
         ExecutionResult r = new ExecutionResult();
         r.setStatementType(inferStatementType(sql));
+        String trimmed = sql != null ? sql.trim() : "";
         try {
-            try (Statement st = conn.createStatement()) {
-                st.setQueryTimeout(300);
-                boolean isResultSet = st.execute(sql);
-                if (isResultSet) {
-                    try (ResultSet rs = st.getResultSet()) {
-                        ResultSetMetaData meta = rs.getMetaData();
-                        int cols = meta.getColumnCount();
-                        List<String> columnNames = new ArrayList<>();
-                        for (int i = 1; i <= cols; i++) {
-                            columnNames.add(meta.getColumnLabel(i));
-                        }
-                        r.setColumns(columnNames);
-                        List<List<Object>> rows = new ArrayList<>();
-                        while (rs.next()) {
-                            List<Object> row = new ArrayList<>();
+            if (isCallable(trimmed)) {
+                executeCallable(conn, trimmed, r);
+            } else if (isOracle(conn) && isOracleAnonymousBlock(trimmed)) {
+                executeOracleAnonymousBlock(conn, trimmed, r);
+            } else {
+                try (Statement st = conn.createStatement()) {
+                    st.setQueryTimeout(300);
+                    boolean isResultSet = st.execute(sql);
+                    if (isResultSet) {
+                        try (ResultSet rs = st.getResultSet()) {
+                            ResultSetMetaData meta = rs.getMetaData();
+                            int cols = meta.getColumnCount();
+                            List<String> columnNames = new ArrayList<>();
                             for (int i = 1; i <= cols; i++) {
-                                Object v = rs.getObject(i);
-                                row.add(v instanceof Clob ? clobToString((Clob) v) : v);
+                                columnNames.add(meta.getColumnLabel(i));
                             }
-                            rows.add(row);
+                            r.setColumns(columnNames);
+                            List<List<Object>> rows = new ArrayList<>();
+                            while (rs.next()) {
+                                List<Object> row = new ArrayList<>();
+                                for (int i = 1; i <= cols; i++) {
+                                    Object v = rs.getObject(i);
+                                    row.add(v instanceof Clob ? clobToString((Clob) v) : v);
+                                }
+                                rows.add(row);
+                            }
+                            r.setRows(rows);
+                            r.setRowsAffected(rows.size());
                         }
-                        r.setRows(rows);
-                        r.setRowsAffected(rows.size());
+                    } else {
+                        r.setRowsAffected(st.getUpdateCount() >= 0 ? st.getUpdateCount() : 0);
                     }
-                } else {
-                    r.setRowsAffected(st.getUpdateCount() >= 0 ? st.getUpdateCount() : 0);
+                    r.setSuccess(true);
                 }
-                r.setSuccess(true);
             }
         } catch (SQLException e) {
             r.setSuccess(false);
             r.setWarning(e.getMessage());
         }
         return r;
+    }
+
+    /**
+     * True if SQL uses JDBC call escape syntax for stored procedures/functions, e.g.
+     * "{ call proc_name() }" or "{ ? = call func_name(?) }".
+     * Supported broadly across Oracle, MySQL, PostgreSQL, SQL Server, etc.
+     */
+    private static boolean isCallable(String sql) {
+        if (sql == null) return false;
+        String trimmed = sql.trim();
+        if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return false;
+        String upper = trimmed.toUpperCase();
+        return upper.contains("CALL");
+    }
+
+    /**
+     * Execute a JDBC callable statement and populate the given result.
+     * This path is used for vendor-neutral stored procedure/function calls.
+     */
+    private static void executeCallable(Connection conn, String sql, ExecutionResult r) throws SQLException {
+        r.setStatementType("CALL");
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setQueryTimeout(300);
+            boolean isResultSet = cs.execute();
+            if (isResultSet) {
+                try (ResultSet rs = cs.getResultSet()) {
+                    ResultSetMetaData meta = rs.getMetaData();
+                    int cols = meta.getColumnCount();
+                    List<String> columnNames = new ArrayList<>();
+                    for (int i = 1; i <= cols; i++) {
+                        columnNames.add(meta.getColumnLabel(i));
+                    }
+                    r.setColumns(columnNames);
+                    List<List<Object>> rows = new ArrayList<>();
+                    while (rs.next()) {
+                        List<Object> row = new ArrayList<>();
+                        for (int i = 1; i <= cols; i++) {
+                            Object v = rs.getObject(i);
+                            row.add(v instanceof Clob ? clobToString((Clob) v) : v);
+                        }
+                        rows.add(row);
+                    }
+                    r.setRows(rows);
+                    r.setRowsAffected(rows.size());
+                }
+            } else {
+                r.setRowsAffected(cs.getUpdateCount() >= 0 ? cs.getUpdateCount() : 0);
+            }
+            r.setSuccess(true);
+        }
+    }
+
+    /**
+     * Execute an Oracle PL/SQL anonymous block via CallableStatement.
+     * Only used when db is Oracle and SQL starts with BEGIN or DECLARE.
+     */
+    private static void executeOracleAnonymousBlock(Connection conn, String sql, ExecutionResult r) throws SQLException {
+        r.setStatementType("PLSQL_BLOCK");
+        try (CallableStatement cs = conn.prepareCall(sql)) {
+            cs.setQueryTimeout(300);
+            boolean isResultSet = cs.execute();
+            if (isResultSet) {
+                try (ResultSet rs = cs.getResultSet()) {
+                    ResultSetMetaData meta = rs.getMetaData();
+                    int cols = meta.getColumnCount();
+                    List<String> columnNames = new ArrayList<>();
+                    for (int i = 1; i <= cols; i++) {
+                        columnNames.add(meta.getColumnLabel(i));
+                    }
+                    r.setColumns(columnNames);
+                    List<List<Object>> rows = new ArrayList<>();
+                    while (rs.next()) {
+                        List<Object> row = new ArrayList<>();
+                        for (int i = 1; i <= cols; i++) {
+                            Object v = rs.getObject(i);
+                            row.add(v instanceof Clob ? clobToString((Clob) v) : v);
+                        }
+                        rows.add(row);
+                    }
+                    r.setRows(rows);
+                    r.setRowsAffected(rows.size());
+                }
+            } else {
+                r.setRowsAffected(cs.getUpdateCount() >= 0 ? cs.getUpdateCount() : 0);
+            }
+            r.setSuccess(true);
+        }
     }
 
     private static String clobToString(Clob clob) throws SQLException {
@@ -223,7 +361,10 @@ public final class JdbcExecutor {
     }
 
     private static String inferStatementType(String sql) {
+        if (sql == null) return "UNKNOWN";
         String upper = sql.toUpperCase().trim();
+        if (isCallable(upper)) return "CALL";
+        if (isOracleAnonymousBlock(upper)) return "PLSQL_BLOCK";
         if (upper.startsWith("SELECT")) return "SELECT";
         if (upper.startsWith("INSERT")) return "INSERT";
         if (upper.startsWith("UPDATE")) return "UPDATE";
