@@ -1,8 +1,17 @@
-Free Use Proprietary License
+仅限个人免费使用, 禁止商业化, 具体请阅读下述授权
+
+License Notice
+
+This project is source-available but not open source.
+Forking, redistribution, and modification are not permitted.
+
+Personal Use License
 
 Copyright (c) 2026 Alvin Liu. All rights reserved.
 
-Permission is hereby granted to any person obtaining a copy of this software and its source code (the "Software") to use the Software free of charge for personal or internal purposes.
+Permission is hereby granted to any individual obtaining a copy of this software and its source code (the "Software") to use the Software free of charge for personal, non-commercial use only.
+
+Use by corporations, organizations, government entities, or for any commercial purpose is strictly prohibited without prior written permission from the copyright holder.
 
 The following activities are strictly prohibited without prior written permission from the copyright holder:
 
@@ -10,16 +19,18 @@ Modifying or creating derivative works of the Software.
 
 Redistributing the Software in any form, including source code or compiled versions.
 
+Public or private mirroring, forking, or redistribution of the Software.
+
 Selling, sublicensing, or commercially exploiting the Software.
 
 Publishing the Software or making it publicly available through any platform or service.
 
-This license grants only the right to use the Software. All other rights are reserved by the copyright holder.
+This license grants only the limited right to use the Software for personal purposes. All other rights are reserved by the copyright holder.
 
 The Software may include third-party components that are subject to their own licenses. Those licenses remain in effect and must be complied with separately.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO THE SOFTWARE OR THE USE OF THE SOFTWARE.
 
 For licensing inquiries, contact: alvin[dot]app.contact[at]gm[remove]ail.com
