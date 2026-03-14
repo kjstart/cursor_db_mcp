@@ -122,8 +122,8 @@ public class DruidSqlAnalyzer implements SqlAnalyzer {
         r.setContainsPLSQL(false);
         r.setPlsqlCreationDDL(false);
         r.setDdl(true);
-        r.setStatementType("SQL Error");
-        r.setDangerous(true);
+            r.setStatementType("UNKNOWN");
+            r.setDangerous(true);
     }
 
     /** Dedupe by case-insensitive key, keep first occurrence. */
