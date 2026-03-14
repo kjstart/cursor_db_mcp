@@ -206,6 +206,65 @@ Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the arg
 
 ---
 
+### 4.4 Claude Code for VS Code (VS Code 版本)
+
+> **注意**：Claude Code 和 Claude Code for VS Code（VS Code 版本）**不共享** MCP 配置。如果你已经在普通 Claude Code 中配置过 db_mcp，VS Code 版本需要单独配置。尤其是当 VS Code 版本配置了自定义 LLM API 时，两者更要注意分开配置。
+
+1. **在项目中创建 `.mcp.json` 文件**
+   - 在你的项目根目录（如 `.cursor/` 或其他项目文件夹）下创建 `.mcp.json` 文件。
+   - 配置示例：
+
+   **Windows** — classpath 分隔符 `;`：
+   ```json
+   {
+     "mcpServers": {
+       "db-mcp": {
+         "command": "java",
+         "args": [
+           "-cp",
+           "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*",
+           "com.alvinliu.dbmcp.DBMCPServer"
+         ],
+         "env": {
+           "DB_MCP_CONFIG": "D:/path/to/db_mcp/config.yaml"
+         }
+       }
+     }
+   }
+   ```
+   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。将 `<version>` 替换为你的 JAR 版本（如 `1.0.0-SNAPSHOT`）。
+
+   **Linux / macOS** — classpath 分隔符 `:`：
+   ```json
+   {
+     "mcpServers": {
+       "db-mcp": {
+         "command": "java",
+         "args": [
+           "-cp",
+           "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*",
+           "com.alvinliu.dbmcp.DBMCPServer"
+         ],
+         "env": {
+           "DB_MCP_CONFIG": "/path/to/db_mcp/config.yaml"
+         }
+       }
+     }
+   }
+   ```
+
+2. **重启 VS Code**
+   - 保存 `.mcp.json` 后**完全退出并重新打开 VS Code**，以加载 MCP 服务。
+
+3. **验证**
+   - 打开 **Claude Code** 插件。
+   - 在对话中输入 `/mcp`。
+   - 如果能看到已加载的 MCP 服务器列表（包含 `db-mcp`），说明配置成功。
+   - 若对话中出现数据库相关 MCP 工具（`list_connections`、`execute_sql`、`execute_sql_file`、`query_to_csv_file`、`query_to_text_file`），说明 db_mcp 已正常工作。
+   - 多数据库时：先调用 `list_connections` 查看名称，再在 `execute_sql` 等工具中传入 `"connection": "database1"` 对指定库执行。
+
+---
+
 ## 5. Tools and behaviour
 
 - **list_connections** — List configured connection names, availability, and `db_type`. Each call re-checks connections; previously failed ones are retried. Use the returned names as the `connection` argument in other tools.
@@ -437,6 +496,65 @@ Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the arg
 ```
 Add a new MCP server called 'db-mcp' using stdio. The command is 'java', the args are '-cp "D:\work\code\db_mcp\target\db-mcp-1.0.0-SNAPSHOT-fat.jar;D:\work\code\db_mcp\lib\*" com.alvinliu.dbmcp.DBMCPServer', and set the environment variable DB_MCP_CONFIG to 'D:\work\code\db_mcp\config.yaml'.
 ```
+
+---
+
+### 4.4 Claude Code for VS Code（VS Code 版本）
+
+> **注意**：Claude Code 和 Claude Code for VS Code（VS Code 版本）**不共享** MCP 配置。如果你已经在普通 Claude Code 中配置过 db_mcp，VS Code 版本需要单独配置。尤其是当 VS Code 版本配置了自定义 LLM API 时，两者更要注意分开配置。
+
+1. **在项目中创建 `.mcp.json` 文件**
+   - 在你的项目根目录（如 `.cursor/` 或其他项目文件夹）下创建 `.mcp.json` 文件。
+   - 配置示例：
+
+   **Windows** — classpath 分隔符 `;`：
+   ```json
+   {
+     "mcpServers": {
+       "db-mcp": {
+         "command": "java",
+         "args": [
+           "-cp",
+           "D:/path/to/db_mcp/target/db-mcp-<version>-fat.jar;D:/path/to/db_mcp/lib/*",
+           "com.alvinliu.dbmcp.DBMCPServer"
+         ],
+         "env": {
+           "DB_MCP_CONFIG": "D:/path/to/db_mcp/config.yaml"
+         }
+       }
+     }
+   }
+   ```
+   将 `D:/path/to/db_mcp` 替换为你的实际路径（JSON 中可用正斜杠或转义反斜杠）。将 `<version>` 替换为你的 JAR 版本（如 `1.0.0-SNAPSHOT`）。
+
+   **Linux / macOS** — classpath 分隔符 `:`：
+   ```json
+   {
+     "mcpServers": {
+       "db-mcp": {
+         "command": "java",
+         "args": [
+           "-cp",
+           "/path/to/db_mcp/target/db-mcp-<version>-fat.jar:/path/to/db_mcp/lib/*",
+           "com.alvinliu.dbmcp.DBMCPServer"
+         ],
+         "env": {
+           "DB_MCP_CONFIG": "/path/to/db_mcp/config.yaml"
+         }
+       }
+     }
+   }
+   ```
+
+2. **重启 VS Code**
+   - 保存 `.mcp.json` 后**完全退出并重新打开 VS Code**，以加载 MCP 服务。
+
+3. **验证**
+   - 打开 **Claude Code** 插件。
+   - 在对话中输入 `/mcp`。
+   - 如果能看到已加载的 MCP 服务器列表（包含 `db-mcp`），说明配置成功。
+   - 若对话中出现数据库相关 MCP 工具（`list_connections`、`execute_sql`、`execute_sql_file`、`query_to_csv_file`、`query_to_text_file`），说明 db_mcp 已正常工作。
+   - 多数据库时：先调用 `list_connections` 查看名称，再在 `execute_sql` 等工具中传入 `"connection": "database1"` 对指定库执行。
 
 ---
 

@@ -127,6 +127,7 @@ The server communicates over **stdio**. How you add it depends on your client:
 
 - **Cursor** — Add a command-type MCP in Cursor settings; see **USER_GUIDE.md** for `mcp.json` examples (Windows and Linux/macOS).
 - **Claude Code** — Use `claude mcp add ...`; see **USER_GUIDE.md** for the exact command and path placeholders.
+- **Claude Code for VS Code (VS Code version)** — Create a `.mcp.json` file in your project directory; see **USER_GUIDE.md** for configuration examples (Windows and Linux/macOS).
 - **OpenClaw** — Add the MCP server by sending a conversation message; see **USER_GUIDE.md** for the exact text and path placeholders.
 
 Replace path placeholders with your actual install path and config file. **Driver JARs** go in `db_mcp/lib/` (e.g. Oracle `ojdbc11.jar`); the project does not bundle drivers.
@@ -259,6 +260,7 @@ Fat JAR 含本工程及 snakeyaml、gson 等，**不含** JDBC 驱动。将 fat 
 
 - **Cursor** — 在 Cursor 设置中添加「命令」型 MCP，详见 **USER_GUIDE.md** 中的 `mcp.json` 示例（Windows / Linux / macOS）。
 - **Claude Code** — 使用 `claude mcp add ...`，详见 **USER_GUIDE.md** 中的命令与路径占位说明。
+- **Claude Code for VS Code (VS Code 版本)** — 在项目目录下创建 `.mcp.json` 文件，详见 **USER_GUIDE.md** 中的配置说明（Windows / Linux / macOS）。
 - **OpenClaw** — 通过发送对话消息添加 MCP 服务，详见 **USER_GUIDE.md** 中的示例文案与路径占位。
 
 将文档中的路径占位替换为本机实际路径。**驱动 JAR** 放入 `db_mcp/lib/`（如 Oracle `ojdbc11.jar`），本工程不随包发布驱动。
